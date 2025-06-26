@@ -1,0 +1,61 @@
+
+  <!DOCTYPE html><html><head><meta charset=UTF-8><style>a{text-decoration:none}</style><meta name=viewport content="width=device-width,initial-scale=1.1"></head><body><p>
+
+    <input id="idserver" list="serverlist" value="" >  
+        <datalist id="serverlist"><option value="test.mosquitto.org:8080"></option>
+                                  <option value="broker.hivemq.com:8000"></option>
+                                  <option value="broker.emqx.io:8083"></option></datalist>server<p>                                    
+
+    <input id="idtopic" value="" >主题topic<p>
+    
+    <!-- ------<button id="connectBtn" onclick="connectMQTT()">连接</button>
+    ------<button id="disconnectBtn" disabled="disabled" onclick="connectEND()">已断开</button>------<p> -->
+
+    <input id="idmessage" list="messagelist" value="search...">  
+        <datalist id="messagelist"><option value="search..."></option>
+                                   <option value="open"></option>
+                                   <option value="stop"></option>
+                                   <option value="get"></option></datalist>
+    <button onclick="sendMessage()">发送send</button><p>
+    
+    <div id="loginfo" style="resize:none; border:1px solid #ccc; padding:5px; overflow-y:auto; height:300px; width: 233px;"></div>
+    
+  </body>
+
+  <script src=" https://unpkg.com/mqtt@5.3.4/dist/mqtt.min.js"></script>
+  <!-- <script src="mqtt.min.js"></script> -->
+
+  <script> var mqttclient; var clientID = randomID(); 
+
+    function randomID(){ return Array.from( {length:15}, () => Math.floor(Math.random() * 10)).join(''); } 
+  
+    getid('idtopic').value = localStorage.getItem('localtopic') || "administrator"; 
+
+    getid('idserver').value = localStorage.getItem('localserver') || "test.mosquitto.org:8080"; 
+
+    function getid(idname){ return document.getElementById(idname); }
+
+    function printlog(logstr){ let syslogs = getid("loginfo"); 
+        syslogs.innerHTML += `${logstr}<br>`; syslogs.scrollTop = syslogs.scrollHeight; }
+    
+    // function button(buttonsta){ buttonsta ? subtopic() : printlog("与mqtt服务器连接已断开"); 
+    //     getid("connectBtn").disabled = buttonsta;  
+    //     getid("connectBtn").innerHTML = buttonsta ? "已连接" : "连接"; 
+    //     getid("disconnectBtn").disabled = !buttonsta;  
+    //     getid("disconnectBtn").innerHTML = buttonsta ? "断开" : "已断开";     }  
+        
+	  function subtopic(){ mqttclient.subscribe(topic); printlog( "clientID: " + clientID );
+        mqttclient.on('message', function(topic,message){ printlog(message) } ); }
+
+	  function connectMQTT(){ server = getid('idserver').value; topic = getid('idtopic').value; 
+        localStorage.setItem('localserver', server ); localStorage.setItem('localtopic', topic );
+        mqttclient = mqtt.connect( "ws://" + server + "/mqtt", {clientID: clientID, keepalive: 60 } ); 
+        mqttclient.stream.on('error', function(err) { printlog(err); } );
+        mqttclient.on('connect',function(packet){subtopic()} ) }
+        
+	  // function connectEND(){ mqttclient.end(); }
+    
+    function sendMessage(){ 
+        mqttclient && mqttclient.connected ? mqttclient.publish( topic, getid("idmessage").value ) : connectMQTT(); }
+
+  </script></html>
